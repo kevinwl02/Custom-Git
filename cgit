@@ -10,8 +10,8 @@ class CGit < Thor
 		exec ("git add --a .")
 		exec ("git commit -m \"#{options[:message]}\"")
 
-		remote_branch = options[:remote]
-		if remote_branch
+		remote = options[:remote]
+		if remote
 			exec ("git push origin HEAD")
 		end
 	end
@@ -26,8 +26,8 @@ class CGit < Thor
 	def retip(commit)
 		exec ("git reset --hard #{commit}")
 
-		remote_branch = options[:remote]
-		if remote_branch
+		remote = options[:remote]
+		if remote
 			exec ("git push origin HEAD --force")
 		end
 	end
