@@ -3,7 +3,7 @@
 require 'Thor'
 
 class CGit < Thor
-	desc "put MESSAGE", "Adds, commits with a MESSAGE and pushes the current HEAD"
+	desc "put MESSAGE", "Adds and commits with a MESSAGE"
 	method_option :remote, :aliases => "-r", :desc => "Applies this to the current HEAD"
 	def put(message)
 		system ("git add --a .")
