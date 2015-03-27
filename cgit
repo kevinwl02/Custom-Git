@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require 'Thor'
+
+class CGit < Thor
+	desc "upload", "Adds, commits and pushes the current HEAD"
+	method_option :message, :default => "", :aliases => "-m", :desc => "Message for the commit"
+	method_option :remote, :aliases => "-r", :desc => "Applies this to the current HEAD"
+	def upload
+		exec ("git add --a .")
+		exec ("git commit -m \"#{options[:message]}\"")
+
+		remote_branch = options[:remote]
+		if remote_branch
+			exec ("git push origin HEAD")
+		end
+	end
+
+	desc "uncommit", "Undoes a commit to the previous HEAD, while keeping the changes"
+	def uncommit
+		exec ("git reset --soft HEAD^")
+	end
+
+	desc "retip COMMIT", "Moves the TIP of the current branch"
+	method_option :remote, :aliases => "-r", :desc => "Applies this to the current HEAD"
+	def retip(commit)
+		exec ("git reset --hard #{commit}")
+
+		remote_branch = options[:remote]
+		if remote_branch
+			exec ("git push origin HEAD --force")
+		end
+	end
+end
+
+CGit.start
