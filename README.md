@@ -21,16 +21,12 @@ cgit merge DESTINATION_BRANCH SOURCE_BRANCH (-r)
 ```
 
 ##Installation
-###1. Dependencies
-Custom Git depends on the Thor ruby gem. Do:
+
+Install the ruby gem:
 
 ```shell
-gem install thor
+sudo gem install cgit
 ```
-
-###2. Install
-####Manual way
-Just copy the cgit script into the /usr/bin folder.
 
 ##Author
 
