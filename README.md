@@ -25,7 +25,7 @@ cgit merge DESTINATION_BRANCH SOURCE_BRANCH (-r)
 Install the ruby gem:
 
 ```shell
-sudo gem install cgit
+(sudo) gem install cgit
 ```
 
 ##Author
