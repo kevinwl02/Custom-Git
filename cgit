@@ -38,7 +38,7 @@ class CGit < Thor
 	end
 
 	desc "valid", "Displays unpushed commits to remote in all branches."
-	def validate
+	def valid
 		puts ("Non pushed commits:")
 		system ("git log --branches --not --remotes --decorate --oneline")
 	end
