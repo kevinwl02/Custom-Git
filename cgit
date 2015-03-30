@@ -3,8 +3,8 @@
 require 'Thor'
 
 class CGit < Thor
-	desc "put MESSAGE", "Adds and commits with a MESSAGE"
-	method_option :remote, :aliases => "-r", :desc => "Applies this to the current HEAD"
+	desc "put MESSAGE", "Adds and commits with a MESSAGE."
+	method_option :remote, :aliases => "-r", :desc => "Applies this remotely to the current branch."
 	def put(message)
 		system ("git add --a .")
 		system ("git commit -m \"#{message}\"")
@@ -15,13 +15,13 @@ class CGit < Thor
 		end
 	end
 
-	desc "uncommit", "Undoes a commit to the previous HEAD, while keeping the changes"
+	desc "uncommit", "Undoes a commit to the previous HEAD, while keeping the changes."
 	def uncommit
 		system ("git reset --soft HEAD^")
 	end
 
 	desc "retip COMMIT", "Moves the TIP of the current branch"
-	method_option :remote, :aliases => "-r", :desc => "Applies this to the current HEAD"
+	method_option :remote, :aliases => "-r", :desc => "Applies this remotely to the current branch."
 	def retip(commit)
 		system ("git reset --hard #{commit}")
 
@@ -31,11 +31,37 @@ class CGit < Thor
 		end
 	end
 
-	desc "commits", "Displays the commit history tree for the current branch"
+	desc "commits", "Displays the commit history tree for the current branch."
 	def commits
 		system ("git symbolic-ref --short HEAD & 
 			git log --pretty=format:\"%h %s\" --graph")
 	end
+
+	desc "valid", "Displays unpushed commits to remote in all branches."
+	def validate
+		puts ("Non pushed commits:")
+		system ("git log --branches --not --remotes --decorate --oneline")
+	end
+
+	desc "merge DESTINATION_BRANCH SOURCE_BRANCH", "Pulls latest remote changes on both branches and then merges the SOURCE_BRANCH into the DESTINATION_BRANCH."
+	method_option :remote, :aliases => "-r", :desc => "Pushes the merge remotely to the current branch. Be aware that this will not work if there are conflicts."
+	def merge(destination_branch, source_branch)
+		system ("git checkout #{source_branch}")
+		system ("git pull origin #{source_branch}")
+		system ("git checkout #{destination_branch}")
+		system ("git pull origin #{destination_branch}")
+		system ("git merge #{source_branch}")
+		puts ("==============================")
+		puts ("========== STATUS ============")
+		puts ("==============================")
+		system ("git status")
+
+		remote = options[:remote]
+		if remote
+			system ("git push origin HEAD")
+		end
+	end
+
 end
 
 CGit.start
