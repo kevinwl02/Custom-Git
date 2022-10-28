@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'cgit'
-  s.version     = '0.0.1'
+  s.version     = '0.1.0'
   s.executables << 'cgit'
   s.date        = '2015-03-30'
   s.summary     = "Some useful git command line shortcuts"
