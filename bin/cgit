@@ -3,7 +3,7 @@
 require 'Thor'
 
 class CGit < Thor
-	desc "put MESSAGE", "Adds and commits with a MESSAGE."
+	desc "put [MESSAGE]", "Adds and commits with a MESSAGE."
 	method_option :remote, :aliases => "-r", :desc => "Applies this remotely to the current branch."
 	def put(message)
 		system ("git add --a .")
@@ -20,7 +20,7 @@ class CGit < Thor
 		system ("git reset --soft HEAD^")
 	end
 
-	desc "retip COMMIT", "Moves the TIP of the current branch"
+	desc "retip [COMMIT]", "Moves the TIP of the current branch"
 	method_option :remote, :aliases => "-r", :desc => "Applies this remotely to the current branch."
 	def retip(commit)
 		system ("git reset --hard #{commit}")
@@ -37,13 +37,13 @@ class CGit < Thor
 			git log --pretty=format:\"%h %s\" --graph")
 	end
 
-	desc "valid", "Displays unpushed commits to remote in all branches."
+	desc "unpushed", "Displays unpushed commits to remote in all branches."
 	def valid
 		puts ("Non pushed commits:")
 		system ("git log --branches --not --remotes --decorate --oneline")
 	end
 
-	desc "merge DESTINATION_BRANCH SOURCE_BRANCH", "Pulls latest remote changes on both branches and then merges the SOURCE_BRANCH into the DESTINATION_BRANCH."
+	desc "merge [DESTINATION_BRANCH] [SOURCE_BRANCH]", "Pulls latest remote changes on both branches and then merges the SOURCE_BRANCH into the DESTINATION_BRANCH."
 	method_option :remote, :aliases => "-r", :desc => "Pushes the merge remotely to the current branch. Be aware that this will not work if there are conflicts."
 	def merge(destination_branch, source_branch)
 		system ("git checkout #{source_branch}")
@@ -55,6 +55,68 @@ class CGit < Thor
 		puts ("========== STATUS ============")
 		puts ("==============================")
 		system ("git status")
+
+		remote = options[:remote]
+		if remote
+			system ("git push origin HEAD")
+		end
+	end
+
+	desc "squash [BASE_BRANCH]", "Squashes commits in the current branch and synchronizes with the remote BASE_BRANCH. Commits to squash are selected by comparing the up-to-date remote BASE_BRANCH with the current branch HEAD. Committing the squash may fail if there is a merge conflict. It's recommended to merge with the base branch beforehand if there is a chance of merge conflicts."
+	method_option :message, :aliases => "-m", :desc => "Message to override the default squash message. Cannot be used together with title(-t) parameter."
+	method_option :title, :aliases => "-t", :desc => "Title for the default squash commit message. Will be followed by a list of messages for each commit. If not specified, the title will be the default. Cannot be used together with message(-m) parameter."
+	method_option :remote, :aliases => "-r", :desc => "Pushes the merge remotely to the current branch"
+	def squash(base_branch)
+		message = options[:message]
+		title = options[:title]
+
+		if message && title
+			puts("Please specify only message or title.")
+			exit 1
+		end
+
+		system ("git fetch")
+		system ("git branch -D cgit_squash_backup")
+		system ("git branch cgit_squash_backup")
+		system ("git reset --hard origin/#{base_branch}")
+		system ("git merge --squash cgit_squash_backup")
+
+		if message
+			system ("git commit -m \"#{message}\"")
+		else
+			git_dir = `git rev-parse --git-dir`.delete("\n")
+			file_path = "#{git_dir}/SQUASH_MSG"
+			lines = File.readlines(file_path)
+			skip_count = 0
+			File.open(file_path, 'w') do |file|
+				if title
+					file.puts(title)
+				else
+					file.puts("Squashed commits")
+				end
+				file.puts("")
+
+				# Filter and write the commit messages only
+				lines.each_with_index do |line, i|
+					if skip_count > 0
+						skip_count -= 1
+						next
+					end
+					if line.empty? || line == "\n" || i == 0
+						next
+					end
+					if i + 2 < lines.size - 1 &&
+						line.start_with?("commit") &&
+						lines[i+1].start_with?("Author:") &&
+						lines[i+2].start_with?("Date:")
+						skip_count = 2
+						next
+					end
+					file.puts("* #{line.strip}")
+				end
+			end
+			system ("git commit --no-edit")
+		end
 
 		remote = options[:remote]
 		if remote
